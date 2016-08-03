@@ -364,7 +364,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
+				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};
@@ -381,7 +381,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
+				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};
