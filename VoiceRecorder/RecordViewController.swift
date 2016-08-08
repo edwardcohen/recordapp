@@ -8,8 +8,10 @@
 
 import UIKit
 import AVFoundation
+import CloudKit
+import CoreLocation
 
-class RecordViewController: UIViewController, UIViewControllerTransitioningDelegate, AVAudioRecorderDelegate {
+class RecordViewController: UIViewController, UIViewControllerTransitioningDelegate, AVAudioRecorderDelegate, CLLocationManagerDelegate {
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var chevronButton: UIButton!
     @IBOutlet var backgroundImage: UIImageView!
@@ -19,9 +21,16 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     @IBOutlet var deleteButton: UIButton!
     @IBOutlet var recordProgress: UIProgressView!
     
+    @IBOutlet var spinner: UIActivityIndicatorView!
+    
     var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
+    var locationManager: CLLocationManager!
+    
+    var currentLocation: CLLocation?
+    var audioFileURL: NSURL?
 
+    
     enum RecordingMode: Int {
         case None
         case OneTime
@@ -39,29 +48,28 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        spinner.hidesWhenStopped = true
+        spinner.center = view.center
+        view.addSubview(spinner)
+
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped))
         doubleTap.numberOfTapsRequired = 2
         recordButton.addGestureRecognizer(doubleTap)
 
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTapped))
         view.addGestureRecognizer(singleTap)
-
+        
+        self.locationManager = CLLocationManager()
+        self.locationManager.delegate = self
+        
+        getQuickLocationUpdate()
+        
         updateUI()
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "doneRecording" {
-            finishRecording()
-        }
-    }
-
-//    func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-//        return customPresentAnimationController
-//    }
     
     func showErrorMessage(message: String) {
         let alertController = UIAlertController(title: "Error",
@@ -76,7 +84,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         recordingSession = AVAudioSession.sharedInstance()
         
         do {
-            try recordingSession.setCategory(AVAudioSessionCategoryPlayAndRecord)
+            try recordingSession.setCategory(AVAudioSessionCategoryRecord)
             try recordingSession.setActive(true)
             recordingSession.requestRecordPermission() { [unowned self] (allowed: Bool) -> Void in
                 dispatch_async(dispatch_get_main_queue()) {
@@ -162,7 +170,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     }
     
     func startRecording() {
-        let audioFileURL = getDocumentsDirectoryURL().URLByAppendingPathComponent("recording.m4a")
+        audioFileURL = getDocumentsDirectoryURL().URLByAppendingPathComponent("recording.m4a")
         
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -172,8 +180,10 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         ]
         
         do {
-            audioRecorder = try AVAudioRecorder(URL: audioFileURL, settings: settings)
+            audioRecorder = try AVAudioRecorder(URL: audioFileURL!, settings: settings)
             audioRecorder.delegate = self
+            audioRecorder.prepareToRecord()
+            
             audioRecorder.record()
             
             timerCount = 0
@@ -188,10 +198,6 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         let manager = NSFileManager.defaultManager()
         let URLs = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
         return URLs[0]
-    }
-    
-    func finishRecording() {
-
     }
     
     func abortRecording() {
@@ -223,5 +229,80 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         timerCount = timerCount + 1
     }
     
+    func getQuickLocationUpdate() {
+        // Request location authorization
+        self.locationManager.requestWhenInUseAuthorization()
+        
+        // Request a location update
+        self.locationManager.requestLocation()
+        // Note: requestLocation may timeout and produce an error if authorization has not yet been granted by the user
+    }
+    
+    func locationManager(manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("Got current location.")
+        currentLocation = locations.last
+        locationManager.stopUpdatingLocation()
+    }
+    
+    func locationManager(manager: CLLocationManager, didFailWithError error: NSError) {
+        print("Error while updating location " + error.localizedDescription)
+    }
+    
+    @IBAction func doneTapped() {
+        audioRecorder.stop()
+        audioRecorder = nil
+
+        let title = titleText.text
+        let length = timerCount
+        let tags = ["tag"]
+        let location = currentLocation!
+        let date = NSDate()
+        let audio = audioFileURL!
+        
+        let voice = Voice(title: title, length: length, date: date, tags: tags, location: location, audio: audio)
+        
+        saveRecordToCloud(voice)
+    }
+    
+    // MARK: - CloudKit Methods
+    
+    func saveRecordToCloud(voice: Voice) -> Void {
+        spinner.startAnimating()
+        
+        // Prepare the record to save
+        let record = CKRecord(recordType: "Voice")
+        record.setValue(voice.title, forKey: "title")
+        record.setValue(voice.length, forKey: "length")
+        record.setValue(voice.tags, forKey: "tags")
+        record.setValue(voice.location, forKey: "location")
+        record.setValue(voice.date, forKey: "date")
+        
+        // Create audio asset for upload
+        let audioAsset = CKAsset(fileURL: voice.audio)
+        record.setValue(audioAsset, forKey: "audio")
+        
+        // Get the Public iCloud Database
+        let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
+        
+        // Save the record to iCloud
+        publicDatabase.saveRecord(record, completionHandler: { (record:CKRecord?, error:NSError?) -> Void  in
+            if (error == nil) {
+                // Remove temp file
+                do {
+                    try NSFileManager.defaultManager().removeItemAtPath(voice.audio.path!)
+                    print("Saved record to the cloud.")
+
+                    NSOperationQueue.mainQueue().addOperationWithBlock() {
+                        self.spinner.stopAnimating()
+                        self.performSegueWithIdentifier("doneRecording", sender: self)
+                    }
+                } catch {
+                    print("Failed to delete temparary file.")
+                }
+            } else {
+                print("Failed to save record to the cloud: \(error)")
+            }
+        })
+    }
 }
 
