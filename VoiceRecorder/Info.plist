@@ -22,6 +22,10 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Use your location to record your voice. Your location is never shared.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Use your location to record your voice. Your location is never shared.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
@@ -42,9 +46,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Use your location to find nearby restaurants. Your location is never shared.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Use your location to find nearby restaurants. Your location is never shared.</string>
 </dict>
 </plist>
