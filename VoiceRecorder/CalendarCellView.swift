@@ -13,6 +13,7 @@ class CalendarCellView: JTAppleDayCellView {
     @IBInspectable var normalDayColor: UIColor! //UIColor(white: 0.0, alpha: 0.1)
     @IBOutlet var selectedView: AnimationView!
     @IBOutlet var dayLabel: UILabel!
+    @IBOutlet var dotLabel: UILabel!
     
     let textSelectedColor = UIColor.whiteColor()
     let textDeselectedColor = UIColor.whiteColor()
@@ -29,7 +30,7 @@ class CalendarCellView: JTAppleDayCellView {
         return f
     }()
     
-    func setupCellBeforeDisplay(cellState: CellState, date: NSDate) {
+    func setupCellBeforeDisplay(cellState: CellState, date: NSDate, indicator: Bool) {
         // Setup Cell text
         dayLabel.text =  cellState.text
         
@@ -43,6 +44,9 @@ class CalendarCellView: JTAppleDayCellView {
     
         // Configure Visibility
         configureVisibility(cellState)
+        
+        // Configure Indicator
+        dotLabel.hidden = !indicator
         
         // With cell states you can literally control every aspect of the calendar view
         // Uncomment this code block to watch "JTAPPLE" spelt on the calendar

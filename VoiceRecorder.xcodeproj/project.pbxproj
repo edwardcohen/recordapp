@@ -14,9 +14,7 @@
 		6B80035C1C9983A100A3ED9C /* CalendarCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B80035A1C9983A100A3ED9C /* CalendarCellView.swift */; };
 		6B80035F1C9983AE00A3ED9C /* AnimationClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B80035E1C9983AE00A3ED9C /* AnimationClass.swift */; };
 		6BCFFB3E1C9B9F1B005E2C7E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6BCFFB3C1C9B9F1B005E2C7E /* Main.storyboard */; };
-		6BE786721CF7196F00191F8D /* CalendarCodeCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BE786711CF7196F00191F8D /* CalendarCodeCellView.swift */; };
 		6BE786741CF72D5800191F8D /* CalendarCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6B80035B1C9983A100A3ED9C /* CalendarCellView.xib */; };
-		6BE786751CF72D9100191F8D /* CalendarCodeCellView.swift in Resources */ = {isa = PBXBuildFile; fileRef = 6BE786711CF7196F00191F8D /* CalendarCodeCellView.swift */; };
 		8B0218BB1D50ED14007D208D /* RecordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0218BA1D50ED14007D208D /* RecordViewController.swift */; };
 		8B0218BD1D50ED2E007D208D /* CustomPresentAnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0218BC1D50ED2E007D208D /* CustomPresentAnimationController.swift */; };
 		8B02750C1D54D92A00983BF5 /* VoiceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B02750B1D54D92A00983BF5 /* VoiceDetailViewController.swift */; };
@@ -40,7 +38,6 @@
 		6B80035B1C9983A100A3ED9C /* CalendarCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CalendarCellView.xib; sourceTree = "<group>"; };
 		6B80035E1C9983AE00A3ED9C /* AnimationClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimationClass.swift; sourceTree = "<group>"; };
 		6BCFFB3D1C9B9F1B005E2C7E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		6BE786711CF7196F00191F8D /* CalendarCodeCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarCodeCellView.swift; sourceTree = "<group>"; };
 		847F02EE1D10CABFC736E4E5 /* Pods-VoiceRecorder.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VoiceRecorder.debug.xcconfig"; path = "Pods/Target Support Files/Pods-VoiceRecorder/Pods-VoiceRecorder.debug.xcconfig"; sourceTree = "<group>"; };
 		8B0218BA1D50ED14007D208D /* RecordViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecordViewController.swift; sourceTree = "<group>"; };
 		8B0218BC1D50ED2E007D208D /* CustomPresentAnimationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomPresentAnimationController.swift; sourceTree = "<group>"; };
@@ -105,7 +102,6 @@
 				8B0218BC1D50ED2E007D208D /* CustomPresentAnimationController.swift */,
 				6B80035E1C9983AE00A3ED9C /* AnimationClass.swift */,
 				6B80035A1C9983A100A3ED9C /* CalendarCellView.swift */,
-				6BE786711CF7196F00191F8D /* CalendarCodeCellView.swift */,
 				8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				6BCFFB3C1C9B9F1B005E2C7E /* Main.storyboard */,
@@ -207,7 +203,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BE786751CF72D9100191F8D /* CalendarCodeCellView.swift in Resources */,
 				6BE786741CF72D5800191F8D /* CalendarCellView.xib in Resources */,
 				6BCFFB3E1C9B9F1B005E2C7E /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
@@ -272,7 +267,6 @@
 			files = (
 				6B8003571C99831B00A3ED9C /* VoiceTableViewController.swift in Sources */,
 				8BFF2CA61D537C9000D84BF2 /* VoiceTableCellView.swift in Sources */,
-				6BE786721CF7196F00191F8D /* CalendarCodeCellView.swift in Sources */,
 				6B80035F1C9983AE00A3ED9C /* AnimationClass.swift in Sources */,
 				8B0218BB1D50ED14007D208D /* RecordViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
@@ -342,7 +336,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -380,7 +374,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -396,7 +390,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
@@ -414,7 +407,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;

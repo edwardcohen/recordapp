@@ -4,7 +4,6 @@
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
-        <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
@@ -14,18 +13,8 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="EbV-Fp-hR6" customClass="AnimationView" customModule="VoiceRecorder" customModuleProvider="target">
-                    <rect key="frame" x="40" y="21" width="101" height="101"/>
-                    <color key="backgroundColor" red="0.91764705879999997" green="0.63529411759999999" blue="0.38823529410000002" alpha="1" colorSpace="calibratedRGB"/>
-                    <constraints>
-                        <constraint firstAttribute="height" constant="20" id="8bC-to-itB"/>
-                        <constraint firstAttribute="width" constant="20" id="kcQ-Q3-xC1"/>
-                    </constraints>
-                    <variation key="default">
-                        <mask key="constraints">
-                            <exclude reference="8bC-to-itB"/>
-                            <exclude reference="kcQ-Q3-xC1"/>
-                        </mask>
-                    </variation>
+                    <rect key="frame" x="19" y="-1" width="144" height="145"/>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                 </view>
                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="1" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="A7s-8j-sxm">
                     <rect key="frame" x="85" y="60" width="12" height="24"/>
@@ -33,12 +22,20 @@
                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                     <nil key="highlightedColor"/>
                 </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="s5W-9N-HPl" userLabel="Dot Label">
+                    <rect key="frame" x="87" y="57" width="8" height="36"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="30"/>
+                    <color key="textColor" red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
             </subviews>
             <constraints>
+                <constraint firstItem="s5W-9N-HPl" firstAttribute="centerY" secondItem="S0w-C3-aBs" secondAttribute="centerY" constant="3" id="BAi-Qo-0cy"/>
                 <constraint firstItem="EbV-Fp-hR6" firstAttribute="centerX" secondItem="S0w-C3-aBs" secondAttribute="centerX" id="F2n-Nl-12g"/>
-                <constraint firstItem="EbV-Fp-hR6" firstAttribute="height" secondItem="S0w-C3-aBs" secondAttribute="height" multiplier="0.7" id="H3q-bV-NcR"/>
-                <constraint firstItem="EbV-Fp-hR6" firstAttribute="width" secondItem="S0w-C3-aBs" secondAttribute="height" multiplier="0.7" id="WBq-0C-fme"/>
+                <constraint firstItem="EbV-Fp-hR6" firstAttribute="height" secondItem="S0w-C3-aBs" secondAttribute="height" id="H3q-bV-NcR"/>
+                <constraint firstItem="EbV-Fp-hR6" firstAttribute="width" secondItem="S0w-C3-aBs" secondAttribute="height" id="WBq-0C-fme"/>
                 <constraint firstItem="EbV-Fp-hR6" firstAttribute="centerY" secondItem="S0w-C3-aBs" secondAttribute="centerY" id="Xd4-Jh-UKm"/>
+                <constraint firstItem="s5W-9N-HPl" firstAttribute="centerX" secondItem="S0w-C3-aBs" secondAttribute="centerX" id="by1-Fu-w17"/>
                 <constraint firstItem="A7s-8j-sxm" firstAttribute="centerY" secondItem="S0w-C3-aBs" secondAttribute="centerY" id="iKC-Wd-Ag7"/>
                 <constraint firstItem="A7s-8j-sxm" firstAttribute="centerX" secondItem="S0w-C3-aBs" secondAttribute="centerX" id="iet-GD-Hki"/>
             </constraints>
@@ -53,6 +50,7 @@
             </userDefinedRuntimeAttributes>
             <connections>
                 <outlet property="dayLabel" destination="A7s-8j-sxm" id="XDJ-WI-rCD"/>
+                <outlet property="dotLabel" destination="s5W-9N-HPl" id="5tm-XV-o0t"/>
                 <outlet property="selectedView" destination="EbV-Fp-hR6" id="oHD-FJ-PgR"/>
             </connections>
             <point key="canvasLocation" x="24.5" y="274"/>

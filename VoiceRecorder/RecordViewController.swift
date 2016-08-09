@@ -20,18 +20,15 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     @IBOutlet var titleText: UITextField!
     @IBOutlet var deleteButton: UIButton!
     @IBOutlet var recordProgress: UIProgressView!
-    
     @IBOutlet var spinner: UIActivityIndicatorView!
     
     var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
     var locationManager: CLLocationManager!
-    
     var currentLocation: CLLocation?
     var audioFileURL: NSURL?
 
-    
-    enum RecordingMode: Int {
+    enum RecordState: Int {
         case None
         case OneTime
         case Continuous
@@ -39,7 +36,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         case Done
     }
     
-    var recordingMode: RecordingMode = RecordingMode.None
+    var recordState: RecordState = RecordState.None
     var recordingTimer: NSTimer!
     var timerCount: Int!
     
@@ -54,10 +51,13 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
 
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped))
         doubleTap.numberOfTapsRequired = 2
-        recordButton.addGestureRecognizer(doubleTap)
+        view.addGestureRecognizer(doubleTap)
 
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTapped))
         view.addGestureRecognizer(singleTap)
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressed))
+        view.addGestureRecognizer(longPress)
         
         self.locationManager = CLLocationManager()
         self.locationManager.delegate = self
@@ -65,10 +65,32 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         getQuickLocationUpdate()
         
         updateUI()
+        
+        recordingSession = AVAudioSession.sharedInstance()
+        do {
+            try recordingSession.setCategory(AVAudioSessionCategoryRecord)
+            try recordingSession.setActive(true)
+            recordingSession.requestRecordPermission() { [unowned self] (allowed: Bool) -> Void in
+                dispatch_async(dispatch_get_main_queue()) {
+                    if !allowed {
+                        self.showErrorMessage("You need to configure Microphone permission")
+                    }
+                }
+            }
+        } catch {
+            showErrorMessage("Failed to configure AVAudioSession!")
+        }
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
+    }
+    
+    @IBAction func handleDelete() {
+        if recordState == RecordState.Done {
+            recordState = RecordState.None
+            updateUI()
+        }
     }
     
     func showErrorMessage(message: String) {
@@ -80,57 +102,65 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             nil)
     }
     
-    func doubleTapped() {
-        recordingSession = AVAudioSession.sharedInstance()
-        
-        do {
-            try recordingSession.setCategory(AVAudioSessionCategoryRecord)
-            try recordingSession.setActive(true)
-            recordingSession.requestRecordPermission() { [unowned self] (allowed: Bool) -> Void in
-                dispatch_async(dispatch_get_main_queue()) {
-                    if allowed {
-                        self.recordingMode = RecordingMode.Continuous
-                        self.updateUI()
-                        self.startRecording()
-                    } else {
-                        self.showErrorMessage("You need to configure Microphone permission")
-                    }
-                }
+    func longPressed(gesture: UILongPressGestureRecognizer) {
+        switch gesture.state {
+        case UIGestureRecognizerState.Began:
+            print("begin long press")
+            
+            if recordState == RecordState.None {
+                startRecording()
+                recordState = RecordState.OneTime
+                updateUI()
             }
-        } catch {
-            showErrorMessage("Failed to configure AVAudioSession!")
+        case .Ended, .Cancelled:
+            print("end long press")
+            
+            if recordState == RecordState.OneTime {
+                stopRecording()
+                recordState = RecordState.Done
+                updateUI()
+            }
+        default:
+            print("other event at long press")
         }
-
+    }
+    
+    func doubleTapped() {
+        print("double tapped")
+        
+        if recordState == RecordState.None {
+            startRecording()
+            recordState = RecordState.Continuous
+            updateUI()
+        }
     }
     
     func singleTapped() {
-        var nextState: RecordingMode = recordingMode
+        print("single tapped")
         
-        switch recordingMode {
-        case RecordingMode.None:
-            print("old state=None, next state=None")
-        case RecordingMode.OneTime:
-            print("old state=OneTime, next state=OneTime")
-        case RecordingMode.Continuous:
+        var newState: RecordState = recordState
+        
+        switch recordState {
+        case RecordState.Continuous:
             audioRecorder.pause()
             recordingTimer.invalidate()
-            nextState = RecordingMode.Pause
-        case RecordingMode.Pause:
+            newState = RecordState.Pause
+        case RecordState.Pause:
             audioRecorder.record()
             recordingTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(timerUpdate), userInfo: nil, repeats: true)
             timerUpdate()
-            nextState = RecordingMode.Continuous
-        case RecordingMode.Done:
-            print("old state=Done, next state=Done")
+            newState = RecordState.Continuous
+        default: break
         }
 
-        recordingMode = nextState
+        print("old state=\(recordState), new state=\(newState)")
+        recordState = newState
         updateUI()
     }
     
     func updateUI() {
-        switch recordingMode {
-        case RecordingMode.None:
+        switch recordState {
+        case RecordState.None:
             backgroundImage.image = UIImage(named: "blue_background.png")
             recordButton.alpha = 1.0
             chevronButton.alpha = 1.0
@@ -139,7 +169,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 0.0
             titleText.alpha = 0.0
             recordProgress.alpha = 0.0
-        case RecordingMode.OneTime, RecordingMode.Continuous:
+        case RecordState.OneTime, RecordState.Continuous:
             backgroundImage.image = UIImage(named: "red_background.png")
             recordButton.alpha = 0.0
             chevronButton.alpha = 0.0
@@ -148,7 +178,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 0.0
             titleText.alpha = 0.0
             recordProgress.alpha = 1.0
-        case RecordingMode.Done:
+        case RecordState.Done:
             backgroundImage.image = UIImage(named: "blue_background.png")
             recordButton.alpha = 0.0
             chevronButton.alpha = 0.0
@@ -157,7 +187,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 1.0
             titleText.alpha = 1.0
             recordProgress.alpha = 1.0
-        case RecordingMode.Pause:
+        case RecordState.Pause:
             backgroundImage.image = UIImage(named: "red_background.png")
             recordButton.alpha = 0.0
             chevronButton.alpha = 0.0
@@ -167,6 +197,12 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             titleText.alpha = 1.0
             recordProgress.alpha = 1.0
         }
+    }
+    
+    func getDocumentsDirectoryURL() -> NSURL {
+        let manager = NSFileManager.defaultManager()
+        let URLs = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
+        return URLs[0]
     }
     
     func startRecording() {
@@ -194,10 +230,10 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         }
     }
     
-    func getDocumentsDirectoryURL() -> NSURL {
-        let manager = NSFileManager.defaultManager()
-        let URLs = manager.URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)
-        return URLs[0]
+    func stopRecording() {
+        audioRecorder.stop()
+        recordingTimer.invalidate()
+        audioRecorder = nil
     }
     
     func abortRecording() {
@@ -206,13 +242,13 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         showErrorMessage("Recorder did finish recording unsuccessfully")
         audioRecorder = nil
         timerCount = 0
-        recordingMode = RecordingMode.None
-        updateUI()
     }
     
     func audioRecorderDidFinishRecording(recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
             abortRecording()
+            recordState = RecordState.None
+            updateUI()
         }
     }
     
@@ -223,7 +259,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             audioRecorder.stop()
             audioRecorder = nil
             recordingTimer.invalidate()
-            recordingMode = RecordingMode.Done
+            recordState = RecordState.Done
             updateUI()
         }
         timerCount = timerCount + 1

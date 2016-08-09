@@ -30,7 +30,16 @@ class VoiceTableViewController: UIViewController {
         view.addSubview(spinner)
         spinner.startAnimating()
 
-        getRecordsFromCloud()
+        getRecordsFromCloud() { (success: Bool) -> Void in
+            if success {
+                NSOperationQueue.mainQueue().addOperationWithBlock() {
+                    self.spinner.stopAnimating()
+                    self.calendarView.reloadData()
+                    self.calendarView.selectDates([NSDate()], triggerSelectionDelegate: true)
+                    self.tableView.reloadData()
+                }
+            }
+        }
         
         formatter.dateFormat = "yyyy MM dd"
         calendar.timeZone = NSTimeZone(abbreviation: "GMT")!
@@ -59,12 +68,6 @@ class VoiceTableViewController: UIViewController {
         }
         
         tableView.backgroundColor = UIColor.clearColor()
-    }
-    
-    @IBAction func select11(sender: AnyObject?) {
-        calendarView.allowsMultipleSelection = false
-        let date = formatter.dateFromString("2016 02 11")
-        self.calendarView.selectDates([date!], triggerSelectionDelegate: false)
     }
     
     @IBAction func scrollToDate(sender: AnyObject?) {
@@ -98,7 +101,7 @@ class VoiceTableViewController: UIViewController {
         monthButton.setTitle(String(monthName), forState: UIControlState.Normal)
         yearButton.setTitle(String(year), forState: UIControlState.Normal)    }
     
-    func getRecordsFromCloud() {
+    func getRecordsFromCloud(completionHandler: (Bool) -> Void) {
         // Fetch data using Operational API
         let cloudContainer = CKContainer.defaultContainer()
         let publicDatabase = cloudContainer.publicCloudDatabase
@@ -120,15 +123,12 @@ class VoiceTableViewController: UIViewController {
         queryOperation.queryCompletionBlock = { (cursor:CKQueryCursor?, error:NSError?) -> Void in
             if (error != nil) {
                 print("Failed to get data from iCloud - \(error!.localizedDescription)")
+                completionHandler(false)
                 return
             }
             
-            print("Successfully retrieve the data from iCloud")
-            NSOperationQueue.mainQueue().addOperationWithBlock() {
-                self.spinner.stopAnimating()
-                self.tableView.reloadData()
-            }
-            
+            print("Retrieved data from iCloud")
+            completionHandler(true)
         }
         
         // Execute the query
@@ -198,7 +198,12 @@ extension VoiceTableViewController: JTAppleCalendarViewDataSource, JTAppleCalend
     }
 
     func calendar(calendar: JTAppleCalendarView, isAboutToDisplayCell cell: JTAppleDayCellView, date: NSDate, cellState: CellState) {
-        (cell as? CalendarCellView)?.setupCellBeforeDisplay(cellState, date: date)
+        var hasVoice = false
+        if let _ = voiceRecords.indexOf({
+            NSCalendar.currentCalendar().compareDate(($0.objectForKey("date") as! NSDate), toDate: date, toUnitGranularity: .Day)==NSComparisonResult.OrderedSame}) {
+            hasVoice = true
+        }
+        (cell as? CalendarCellView)?.setupCellBeforeDisplay(cellState, date: date, indicator: hasVoice)
     }
 
     func calendar(calendar: JTAppleCalendarView, didDeselectDate date: NSDate, cell: JTAppleDayCellView?, cellState: CellState) {
