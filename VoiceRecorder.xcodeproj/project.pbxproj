@@ -20,6 +20,8 @@
 		8B02750C1D54D92A00983BF5 /* VoiceDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B02750B1D54D92A00983BF5 /* VoiceDetailViewController.swift */; };
 		8B02750E1D54DBC200983BF5 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B02750D1D54DBC200983BF5 /* MapKit.framework */; };
 		8B0275101D54DEF600983BF5 /* Voice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B02750F1D54DEF600983BF5 /* Voice.swift */; };
+		8B09A6E91D5B606500EBF853 /* TagCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B09A6E81D5B606500EBF853 /* TagCellView.swift */; };
+		8B3476131D5CC2100003A531 /* TagCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8B3476121D5CC2100003A531 /* TagCellView.xib */; };
 		8BFA25851D523C5200821EEC /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BFA25841D523C5200821EEC /* CloudKit.framework */; };
 		8BFF2CA61D537C9000D84BF2 /* VoiceTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */; };
 		F6AE1A17FD8372DA17ED9D9C /* Pods_VoiceRecorder.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3128D151D2541D5560030952 /* Pods_VoiceRecorder.framework */; };
@@ -44,6 +46,8 @@
 		8B02750B1D54D92A00983BF5 /* VoiceDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceDetailViewController.swift; sourceTree = "<group>"; };
 		8B02750D1D54DBC200983BF5 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		8B02750F1D54DEF600983BF5 /* Voice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Voice.swift; sourceTree = "<group>"; };
+		8B09A6E81D5B606500EBF853 /* TagCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TagCellView.swift; sourceTree = "<group>"; };
+		8B3476121D5CC2100003A531 /* TagCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = TagCellView.xib; sourceTree = "<group>"; };
 		8BFA25831D523C2E00821EEC /* VoiceRecorder.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = VoiceRecorder.entitlements; sourceTree = "<group>"; };
 		8BFA25841D523C5200821EEC /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceTableCellView.swift; sourceTree = "<group>"; };
@@ -103,9 +107,11 @@
 				6B80035E1C9983AE00A3ED9C /* AnimationClass.swift */,
 				6B80035A1C9983A100A3ED9C /* CalendarCellView.swift */,
 				8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */,
+				8B09A6E81D5B606500EBF853 /* TagCellView.swift */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				6BCFFB3C1C9B9F1B005E2C7E /* Main.storyboard */,
 				6B80035B1C9983A100A3ED9C /* CalendarCellView.xib */,
+				8B3476121D5CC2100003A531 /* TagCellView.xib */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
 			);
@@ -204,6 +210,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BE786741CF72D5800191F8D /* CalendarCellView.xib in Resources */,
+				8B3476131D5CC2100003A531 /* TagCellView.xib in Resources */,
 				6BCFFB3E1C9B9F1B005E2C7E /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
@@ -274,6 +281,7 @@
 				8B0218BD1D50ED2E007D208D /* CustomPresentAnimationController.swift in Sources */,
 				8B0275101D54DEF600983BF5 /* Voice.swift in Sources */,
 				8B02750C1D54D92A00983BF5 /* VoiceDetailViewController.swift in Sources */,
+				8B09A6E91D5B606500EBF853 /* TagCellView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,7 +400,7 @@
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
+				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};
@@ -409,7 +417,7 @@
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
+				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};

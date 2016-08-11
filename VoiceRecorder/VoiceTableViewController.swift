@@ -17,10 +17,14 @@ class VoiceTableViewController: UIViewController {
     @IBOutlet var yearButton: UIButton!
     @IBOutlet var calendarView: JTAppleCalendarView!
     @IBOutlet var tableView: UITableView!
+    @IBOutlet var tagView: UICollectionView!
     @IBOutlet var spinner: UIActivityIndicatorView!
     
     let formatter = NSDateFormatter()
     let calendar: NSCalendar! = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
+    
+    var tags = ["Tag1", "Tag2", "TTTag3", "TAAAg4", "Taggggggg8", "TTTTTTTaaaggg9"]
+    var sizingCell: TagCellView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -68,6 +72,14 @@ class VoiceTableViewController: UIViewController {
         }
         
         tableView.backgroundColor = UIColor.clearColor()
+        
+        tagView.delegate = self
+        tagView.dataSource = self
+        
+        let cellNib = UINib(nibName: "TagCellView", bundle: nil)
+        self.tagView.registerNib(cellNib, forCellWithReuseIdentifier: "TagCell")
+        self.tagView.backgroundColor = UIColor.clearColor()
+        self.sizingCell = (cellNib.instantiateWithOwner(nil, options: nil) as NSArray).firstObject as! TagCellView?
     }
     
     @IBAction func scrollToDate(sender: AnyObject?) {
@@ -266,6 +278,31 @@ extension VoiceTableViewController: UITableViewDataSource, UITableViewDelegate {
         }
     }
     
+}
+
+extension VoiceTableViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return tags.count
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let tagCell = collectionView.dequeueReusableCellWithReuseIdentifier("TagCell", forIndexPath: indexPath) as! TagCellView
+        self.configureCell(tagCell, forIndexPath: indexPath)
+        return tagCell
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        self.configureCell(self.sizingCell!, forIndexPath: indexPath)
+        return self.sizingCell!.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
+    }
+    
+    func configureCell(cell: TagCellView, forIndexPath indexPath: NSIndexPath) {
+        cell.tagLabel.text = tags[indexPath.item]
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        print("Selected TAG ---> \(tags[indexPath.item])")
+    }
 }
 
 func delayRunOnMainThread(delay:Double, closure:()->()) {
