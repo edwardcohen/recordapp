@@ -21,12 +21,18 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     @IBOutlet var deleteButton: UIButton!
     @IBOutlet var recordProgress: UIProgressView!
     @IBOutlet var spinner: UIActivityIndicatorView!
+    @IBOutlet var tagView: UICollectionView!
     
     var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
     var locationManager: CLLocationManager!
     var currentLocation: CLLocation?
     var audioFileURL: NSURL?
+
+    var tags = ["+"]
+    var marks = [Int]()
+    
+    var sizingCell: TagCellView?
 
     enum RecordState: Int {
         case None
@@ -49,15 +55,17 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         spinner.center = view.center
         view.addSubview(spinner)
 
+        backgroundImage.userInteractionEnabled = true
+        
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped))
         doubleTap.numberOfTapsRequired = 2
-        view.addGestureRecognizer(doubleTap)
+        backgroundImage.addGestureRecognizer(doubleTap)
 
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTapped))
-        view.addGestureRecognizer(singleTap)
+        backgroundImage.addGestureRecognizer(singleTap)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressed))
-        view.addGestureRecognizer(longPress)
+        backgroundImage.addGestureRecognizer(longPress)
         
         self.locationManager = CLLocationManager()
         self.locationManager.delegate = self
@@ -80,6 +88,14 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         } catch {
             showErrorMessage("Failed to configure AVAudioSession!")
         }
+        
+        tagView.dataSource = self
+        tagView.delegate = self
+        
+        let cellNib = UINib(nibName: "TagCellView", bundle: nil)
+        self.tagView.registerNib(cellNib, forCellWithReuseIdentifier: "TagCell")
+        self.tagView.backgroundColor = UIColor.clearColor()
+        self.sizingCell = (cellNib.instantiateWithOwner(nil, options: nil) as NSArray).firstObject as! TagCellView?
     }
 
     override func didReceiveMemoryWarning() {
@@ -88,6 +104,10 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     
     @IBAction func handleDelete() {
         if recordState == RecordState.Done {
+            tags.removeAll()
+            tags.append("+")
+            tagView.reloadData()
+            marks.removeAll()
             recordState = RecordState.None
             updateUI()
         }
@@ -146,6 +166,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             recordingTimer.invalidate()
             newState = RecordState.Pause
         case RecordState.Pause:
+            marks.append(timerCount)
             audioRecorder.record()
             recordingTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(timerUpdate), userInfo: nil, repeats: true)
             timerUpdate()
@@ -169,6 +190,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 0.0
             titleText.alpha = 0.0
             recordProgress.alpha = 0.0
+            tagView.alpha = 0.0
         case RecordState.OneTime, RecordState.Continuous:
             backgroundImage.image = UIImage(named: "red_background.png")
             recordButton.alpha = 0.0
@@ -178,6 +200,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 0.0
             titleText.alpha = 0.0
             recordProgress.alpha = 1.0
+            tagView.alpha = 0.0
         case RecordState.Done:
             backgroundImage.image = UIImage(named: "blue_background.png")
             recordButton.alpha = 0.0
@@ -187,6 +210,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 1.0
             titleText.alpha = 1.0
             recordProgress.alpha = 1.0
+            tagView.alpha = 1.0
         case RecordState.Pause:
             backgroundImage.image = UIImage(named: "red_background.png")
             recordButton.alpha = 0.0
@@ -196,6 +220,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             deleteButton.alpha = 1.0
             titleText.alpha = 1.0
             recordProgress.alpha = 1.0
+            tagView.alpha = 1.0
         }
     }
     
@@ -285,17 +310,15 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     }
     
     @IBAction func doneTapped() {
-        audioRecorder.stop()
-        audioRecorder = nil
-
         let title = titleText.text
         let length = timerCount
-        let tags = ["tag"]
+        let tags = self.tags.filter() { $0 != "+" }
         let location = currentLocation!
         let date = NSDate()
+        let marks = self.marks
         let audio = audioFileURL!
         
-        let voice = Voice(title: title, length: length, date: date, tags: tags, location: location, audio: audio)
+        let voice = Voice(title: title, length: length, date: date, tags: tags, location: location, marks: marks, audio: audio)
         
         saveRecordToCloud(voice)
     }
@@ -311,6 +334,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         record.setValue(voice.length, forKey: "length")
         record.setValue(voice.tags, forKey: "tags")
         record.setValue(voice.location, forKey: "location")
+        record.setValue(voice.marks, forKey: "marks")
         record.setValue(voice.date, forKey: "date")
         
         // Create audio asset for upload
@@ -342,3 +366,45 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     }
 }
 
+extension RecordViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return tags.count
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let tagCell = collectionView.dequeueReusableCellWithReuseIdentifier("TagCell", forIndexPath: indexPath) as! TagCellView
+        self.configureCell(tagCell, forIndexPath: indexPath)
+        return tagCell
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        self.configureCell(self.sizingCell!, forIndexPath: indexPath)
+        return self.sizingCell!.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
+    }
+    
+    func configureCell(cell: TagCellView, forIndexPath indexPath: NSIndexPath) {
+        cell.tagLabel.text = tags[indexPath.item]
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        if tags[indexPath.item] == "+" {
+            var tagTextField: UITextField?
+            
+            let alertController = UIAlertController(title: "Add TAG", message: nil, preferredStyle: .Alert)
+            let ok = UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
+                if let tagText = tagTextField!.text {
+                    self.tags.insert(tagText, atIndex: self.tags.count-1)
+                    self.tagView.reloadData()
+                }
+            })
+            let cancel = UIAlertAction(title: "Cancel", style: .Default, handler: nil)
+            alertController.addAction(ok)
+            alertController.addAction(cancel)
+            alertController.addTextFieldWithConfigurationHandler { (textField) -> Void in
+                tagTextField = textField
+                tagTextField!.placeholder = "TAG"
+            }
+            presentViewController(alertController, animated: true, completion: nil)
+        }
+    }
+}

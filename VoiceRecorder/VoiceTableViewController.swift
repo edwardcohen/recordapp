@@ -23,7 +23,7 @@ class VoiceTableViewController: UIViewController {
     let formatter = NSDateFormatter()
     let calendar: NSCalendar! = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian)
     
-    var tags = ["Tag1", "Tag2", "TTTag3", "TAAAg4", "Taggggggg8", "TTTTTTTaaaggg9"]
+    var tags = [String]()
     var sizingCell: TagCellView?
     
     override func viewDidLoad() {
@@ -40,6 +40,8 @@ class VoiceTableViewController: UIViewController {
                     self.spinner.stopAnimating()
                     self.calendarView.reloadData()
                     self.calendarView.selectDates([NSDate()], triggerSelectionDelegate: true)
+                    self.getTagsFromRecords()
+                    self.tagView.reloadData()
                     self.tableView.reloadData()
                 }
             }
@@ -123,7 +125,7 @@ class VoiceTableViewController: UIViewController {
         
         // Create the query operation with the query
         let queryOperation = CKQueryOperation(query: query)
-        queryOperation.desiredKeys = ["title", "length", "date", "location", "tags"]
+        queryOperation.desiredKeys = ["title", "length", "date", "location", "tags", "marks"]
         queryOperation.queuePriority = .VeryHigh
         queryOperation.resultsLimit = 50
         queryOperation.recordFetchedBlock = { (record:CKRecord!) -> Void in
@@ -147,6 +149,35 @@ class VoiceTableViewController: UIViewController {
         publicDatabase.addOperation(queryOperation)
     }
     
+    func getTagsFromRecords() {
+        var tags = [String]()
+        for voiceRecord in voiceRecords {
+            if let recordTags = voiceRecord.objectForKey("tags") as? [String] {
+                for recordTag in recordTags {
+                    tags.append(recordTag)
+                }
+            }
+        }
+        print(tags)
+        
+        // Sort by frequency
+        var tagFrequencies = [String: Int]()
+        for tag in tags {
+            if tagFrequencies[tag] == nil {
+                tagFrequencies[tag] = 1
+            } else {
+                tagFrequencies[tag] = tagFrequencies[tag]! + 1
+            }
+        }
+        print(tagFrequencies)
+        
+        var sortedTags = Array(tagFrequencies.keys)
+        sortedTags.sortInPlace({ tagFrequencies[$0] > tagFrequencies[$1] })
+        print(sortedTags)
+        
+        self.tags = sortedTags
+    }
+    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showVoiceDetail" {
             if let indexPath = tableView.indexPathForSelectedRow {
@@ -157,9 +188,10 @@ class VoiceTableViewController: UIViewController {
                 let length = voiceRecord.objectForKey("length") as! Int
                 let tags = voiceRecord.objectForKey("tags") as? [String]
                 let date = voiceRecord.objectForKey("date") as! NSDate
+                let marks = voiceRecord.objectForKey("marks") as? [Int]
                 let location = voiceRecord.objectForKey("location") as! CLLocation
                 
-                destinationController.voice = Voice(title: title, length: length, date: date, tags: tags, location: location, audio: audioFileURL!)
+                destinationController.voice = Voice(title: title, length: length, date: date, tags: tags, location: location, marks: marks, audio: audioFileURL!)
             }
         }
     }
@@ -258,6 +290,8 @@ extension VoiceTableViewController: UITableViewDataSource, UITableViewDelegate {
         let datestring = dateformatter.stringFromDate(date)
         cell.dateLabel.text = String(datestring)
         
+        cell.tags = voiceRecord.objectForKey("tags") as! [String]
+        
         cell.backgroundColor = UIColor.clearColor()
         
         return cell
@@ -276,6 +310,13 @@ extension VoiceTableViewController: UITableViewDataSource, UITableViewDelegate {
                 self.performSegueWithIdentifier("showVoiceDetail", sender: self)
             }
         }
+    }
+    
+    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        guard let tableViewCell = cell as? VoiceTableCellView else { return }
+        
+        tableViewCell.tagView.reloadData()
+//        tableViewCell.setCollectionViewDataSourceDelegate(self, forRow: indexPath.row)
     }
     
 }
@@ -299,7 +340,7 @@ extension VoiceTableViewController: UICollectionViewDelegate, UICollectionViewDa
     func configureCell(cell: TagCellView, forIndexPath indexPath: NSIndexPath) {
         cell.tagLabel.text = tags[indexPath.item]
     }
-    
+
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         print("Selected TAG ---> \(tags[indexPath.item])")
     }

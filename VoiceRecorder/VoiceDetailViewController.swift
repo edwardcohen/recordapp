@@ -21,6 +21,7 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
     
     @IBOutlet var titleText: UITextField!
     @IBOutlet var lengthLabel: UILabel!
+    @IBOutlet var tagView: UICollectionView!
     @IBOutlet var mapView: MKMapView!
     @IBOutlet var playingProgress: UIProgressView!
     @IBOutlet var playButton: UIButton!
@@ -28,6 +29,8 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
     @IBOutlet var favoriteButton: UIButton!
     @IBOutlet var exportButton: UIButton!
     
+    var sizingCell: TagCellView?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -49,6 +52,16 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
 
         audioPlayer.prepareToPlay()
         audioPlayer.volume = 0.5
+        
+        voice.tags?.append("+")
+        
+        tagView.dataSource = self
+        tagView.delegate = self
+        
+        let cellNib = UINib(nibName: "TagCellView", bundle: nil)
+        self.tagView.registerNib(cellNib, forCellWithReuseIdentifier: "TagCell")
+        self.tagView.backgroundColor = UIColor.clearColor()
+        self.sizingCell = (cellNib.instantiateWithOwner(nil, options: nil) as NSArray).firstObject as! TagCellView?
     }
 
     override func didReceiveMemoryWarning() {
@@ -87,4 +100,47 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
     }
     */
 
+}
+
+extension VoiceDetailViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return voice.tags!.count
+    }
+    
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let tagCell = collectionView.dequeueReusableCellWithReuseIdentifier("TagCell", forIndexPath: indexPath) as! TagCellView
+        self.configureCell(tagCell, forIndexPath: indexPath)
+        return tagCell
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        self.configureCell(self.sizingCell!, forIndexPath: indexPath)
+        return self.sizingCell!.systemLayoutSizeFittingSize(UILayoutFittingCompressedSize)
+    }
+    
+    func configureCell(cell: TagCellView, forIndexPath indexPath: NSIndexPath) {
+        cell.tagLabel.text = voice.tags![indexPath.item]
+    }
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        if voice.tags![indexPath.item] == "+" {
+            var tagTextField: UITextField?
+            
+            let alertController = UIAlertController(title: "Add TAG", message: nil, preferredStyle: .Alert)
+            let ok = UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
+                if let tagText = tagTextField!.text {
+                    self.voice.tags!.insert(tagText, atIndex: self.voice.tags!.count-1)
+                    self.tagView.reloadData()
+                }
+            })
+            let cancel = UIAlertAction(title: "Cancel", style: .Default, handler: nil)
+            alertController.addAction(ok)
+            alertController.addAction(cancel)
+            alertController.addTextFieldWithConfigurationHandler { (textField) -> Void in
+                tagTextField = textField
+                tagTextField!.placeholder = "TAG"
+            }
+            presentViewController(alertController, animated: true, completion: nil)
+        }
+    }
 }

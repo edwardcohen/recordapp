@@ -15,14 +15,16 @@ class Voice {
     var date: NSDate
     var tags: [String]?
     var location: CLLocation
+    var marks: [Int]?
     var audio: NSURL
 
-    init(title: String?, length: Int, date: NSDate, tags: [String]?, location: CLLocation, audio: NSURL) {
+    init(title: String?, length: Int, date: NSDate, tags: [String]?, location: CLLocation, marks: [Int]?, audio: NSURL) {
         self.title = title
         self.length = length
         self.date = date
         self.tags = tags
         self.location = location
+        self.marks = marks
         self.audio = audio
     }
 }
