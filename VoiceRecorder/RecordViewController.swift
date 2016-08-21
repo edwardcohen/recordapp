@@ -344,14 +344,18 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         // Get the Public iCloud Database
         let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
         
-        // Save the record to iCloud
-        publicDatabase.saveRecord(record, completionHandler: { (record:CKRecord?, error:NSError?) -> Void  in
+        let saveRecordsOperation = CKModifyRecordsOperation()
+        saveRecordsOperation.recordsToSave = [record]
+        saveRecordsOperation.savePolicy = .AllKeys
+        saveRecordsOperation.queuePriority = .VeryHigh
+
+        saveRecordsOperation.modifyRecordsCompletionBlock = { savedRecords, deletedRecordIDs, error in
             if (error == nil) {
                 // Remove temp file
                 do {
                     try NSFileManager.defaultManager().removeItemAtPath(voice.audio.path!)
                     print("Saved record to the cloud.")
-
+                    
                     NSOperationQueue.mainQueue().addOperationWithBlock() {
                         self.spinner.stopAnimating()
                         self.performSegueWithIdentifier("doneRecording", sender: self)
@@ -362,7 +366,9 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             } else {
                 print("Failed to save record to the cloud: \(error)")
             }
-        })
+        }
+
+        publicDatabase.addOperation(saveRecordsOperation)
     }
 }
 
