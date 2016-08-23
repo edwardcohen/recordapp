@@ -2,8 +2,8 @@
 //  TagCellView.swift
 //  VoiceRecorder
 //
-//  Created by developer on 8/10/16.
-//  Copyright © 2016 CocoaPods. All rights reserved.
+//  Created by Eddie Cohen & Jason Toff on 8/10/16.
+//  Copyright © 2016 zelig. All rights reserved.
 //
 
 import UIKit

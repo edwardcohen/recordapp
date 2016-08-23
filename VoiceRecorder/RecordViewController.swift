@@ -9,6 +9,7 @@
 import UIKit
 import AVFoundation
 import CloudKit
+import CoreData
 import CoreLocation
 
 class RecordViewController: UIViewController, UIViewControllerTransitioningDelegate, AVAudioRecorderDelegate, CLLocationManagerDelegate {
@@ -310,65 +311,34 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     }
     
     @IBAction func doneTapped() {
-        let title = titleText.text
-        let length = timerCount
-        let tags = self.tags.filter() { $0 != "+" }
-        let location = currentLocation!
-        let date = NSDate()
-        let marks = self.marks
-        let audio = audioFileURL!
+        if audioRecorder != nil {
+            stopRecording()
+        }
         
-        let voice = Voice(title: title, length: length, date: date, tags: tags, location: location, marks: marks, audio: audio)
-        
-        saveRecordToCloud(voice)
-    }
-    
-    // MARK: - CloudKit Methods
-    
-    func saveRecordToCloud(voice: Voice) -> Void {
         spinner.startAnimating()
         
-        // Prepare the record to save
-        let record = CKRecord(recordType: "Voice")
-        record.setValue(voice.title, forKey: "title")
-        record.setValue(voice.length, forKey: "length")
-        record.setValue(voice.tags, forKey: "tags")
-        record.setValue(voice.location, forKey: "location")
-        record.setValue(voice.marks, forKey: "marks")
-        record.setValue(voice.date, forKey: "date")
-        
-        // Create audio asset for upload
-        let audioAsset = CKAsset(fileURL: voice.audio)
-        record.setValue(audioAsset, forKey: "audio")
-        
-        // Get the Public iCloud Database
-        let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
-        
-        let saveRecordsOperation = CKModifyRecordsOperation()
-        saveRecordsOperation.recordsToSave = [record]
-        saveRecordsOperation.savePolicy = .AllKeys
-        saveRecordsOperation.queuePriority = .VeryHigh
-
-        saveRecordsOperation.modifyRecordsCompletionBlock = { savedRecords, deletedRecordIDs, error in
-            if (error == nil) {
-                // Remove temp file
-                do {
-                    try NSFileManager.defaultManager().removeItemAtPath(voice.audio.path!)
-                    print("Saved record to the cloud.")
-                    
-                    NSOperationQueue.mainQueue().addOperationWithBlock() {
-                        self.spinner.stopAnimating()
-                        self.performSegueWithIdentifier("doneRecording", sender: self)
-                    }
-                } catch {
-                    print("Failed to delete temparary file.")
-                }
-            } else {
-                print("Failed to save record to the cloud: \(error)")
+        if let managedObjectContext = (UIApplication.sharedApplication().delegate as? AppDelegate)?.managedObjectContext {
+            let voice = NSEntityDescription.insertNewObjectForEntityForName("Voice", inManagedObjectContext: managedObjectContext) as! Voice
+            voice.title = titleText.text
+            voice.length = timerCount
+            voice.date = NSDate()
+            voice.marks = self.marks
+            voice.tags = self.tags.filter() { $0 != "+" }
+            voice.location = currentLocation!
+            voice.audio = NSData(contentsOfURL: audioFileURL!)!
+            
+            do {
+                try managedObjectContext.save()
+            } catch {
+                print(error)
+                return
             }
         }
-
-        publicDatabase.addOperation(saveRecordsOperation)
+        
+        NSOperationQueue.mainQueue().addOperationWithBlock() {
+            self.spinner.stopAnimating()
+            self.performSegueWithIdentifier("doneRecording", sender: self)
+        }
     }
 }
 

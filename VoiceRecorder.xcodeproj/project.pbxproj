@@ -22,6 +22,7 @@
 		8B0275101D54DEF600983BF5 /* Voice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B02750F1D54DEF600983BF5 /* Voice.swift */; };
 		8B09A6E91D5B606500EBF853 /* TagCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B09A6E81D5B606500EBF853 /* TagCellView.swift */; };
 		8B3476131D5CC2100003A531 /* TagCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8B3476121D5CC2100003A531 /* TagCellView.xib */; };
+		8B4B9E261D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 8B4B9E241D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodeld */; };
 		8BFA25851D523C5200821EEC /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BFA25841D523C5200821EEC /* CloudKit.framework */; };
 		8BFF2CA61D537C9000D84BF2 /* VoiceTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */; };
 		F6AE1A17FD8372DA17ED9D9C /* Pods_VoiceRecorder.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3128D151D2541D5560030952 /* Pods_VoiceRecorder.framework */; };
@@ -48,6 +49,7 @@
 		8B02750F1D54DEF600983BF5 /* Voice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Voice.swift; sourceTree = "<group>"; };
 		8B09A6E81D5B606500EBF853 /* TagCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TagCellView.swift; sourceTree = "<group>"; };
 		8B3476121D5CC2100003A531 /* TagCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = TagCellView.xib; sourceTree = "<group>"; };
+		8B4B9E251D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = VoiceRecorder.xcdatamodel; sourceTree = "<group>"; };
 		8BFA25831D523C2E00821EEC /* VoiceRecorder.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = VoiceRecorder.entitlements; sourceTree = "<group>"; };
 		8BFA25841D523C5200821EEC /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		8BFF2CA51D537C9000D84BF2 /* VoiceTableCellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoiceTableCellView.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				8BFA25831D523C2E00821EEC /* VoiceRecorder.entitlements */,
 				8B02750F1D54DEF600983BF5 /* Voice.swift */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
+				8B4B9E241D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodeld */,
 				8B0218BA1D50ED14007D208D /* RecordViewController.swift */,
 				6B8003561C99831B00A3ED9C /* VoiceTableViewController.swift */,
 				8B02750B1D54D92A00983BF5 /* VoiceDetailViewController.swift */,
@@ -272,6 +275,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B4B9E261D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodeld in Sources */,
 				6B8003571C99831B00A3ED9C /* VoiceTableViewController.swift in Sources */,
 				8BFF2CA61D537C9000D84BF2 /* VoiceTableCellView.swift in Sources */,
 				6B80035F1C9983AE00A3ED9C /* AnimationClass.swift in Sources */,
@@ -400,7 +404,7 @@
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
+				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};
@@ -417,7 +421,7 @@
 				INFOPLIST_FILE = VoiceRecorder/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = zelig.taprecord;
+				PRODUCT_BUNDLE_IDENTIFIER = alexei.voicerecorder;
 				PRODUCT_NAME = VoiceRecorder;
 				PROVISIONING_PROFILE = "";
 			};
@@ -445,6 +449,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		8B4B9E241D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				8B4B9E251D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodel */,
+			);
+			currentVersion = 8B4B9E251D6A0FD0005A7CB5 /* VoiceRecorder.xcdatamodel */;
+			path = VoiceRecorder.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 607FACC81AFB9204008FA782 /* Project object */;
 }

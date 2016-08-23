@@ -2,8 +2,8 @@
 //  VoiceDetailViewController.swift
 //  VoiceRecorder
 //
-//  Created by developer on 8/5/16.
-//  Copyright © 2016 CocoaPods. All rights reserved.
+//  Created by Eddie Cohen & Jason Toff on 8/5/16.
+//  Copyright © 2016 zelig. All rights reserved.
 //
 
 import UIKit
@@ -45,7 +45,7 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
         do {
             try! AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
             try! AVAudioSession.sharedInstance().setActive(true)
-            try audioPlayer = AVAudioPlayer(contentsOfURL: voice.audio, fileTypeHint: AVFileTypeAppleM4A)
+            try audioPlayer = AVAudioPlayer(data: voice.audio, fileTypeHint: AVFileTypeAppleM4A)
         } catch {
             print("error initializing AVAudioPlayer: \(error)")
         }
