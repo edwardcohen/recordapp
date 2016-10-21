@@ -2,7 +2,7 @@
 //  UserInteractionFunctions.swift
 //  Pods
 //
-//  Created by Jay Thomas on 2016-05-12.
+//  Created by JayT on 2016-05-12.
 //
 //
 
@@ -14,26 +14,8 @@ extension JTAppleCalendarView {
     /// - returns:
     ///     - CellState: The state of the found cell
     public func cellStatusForDateAtRow(row: Int, column: Int) -> CellState? {
-        if // the row or column falls within an invalid range
-            row < 0 || row >= cachedConfiguration.numberOfRows ||
-                column < 0 || column >= MAX_NUMBER_OF_DAYS_IN_WEEK {
-            return nil
-        }
-        
-        let Offset: Int
-        let convertedRow: Int
-        let convertedSection: Int
-        if direction == .Horizontal {
-            Offset = Int(round(calendarView.contentOffset.x / (calendarView.collectionViewLayout as! JTAppleCalendarLayoutProtocol).itemSize.width))
-            convertedRow = (row * MAX_NUMBER_OF_DAYS_IN_WEEK) + ((column + Offset) % MAX_NUMBER_OF_DAYS_IN_WEEK)
-            convertedSection = (Offset + column) / MAX_NUMBER_OF_DAYS_IN_WEEK
-        } else {
-            Offset = Int(round(calendarView.contentOffset.y / (calendarView.collectionViewLayout as! JTAppleCalendarLayoutProtocol).itemSize.height))
-            convertedRow = ((row * MAX_NUMBER_OF_DAYS_IN_WEEK) +  column + (Offset * MAX_NUMBER_OF_DAYS_IN_WEEK)) % (MAX_NUMBER_OF_DAYS_IN_WEEK * cachedConfiguration.numberOfRows)
-            convertedSection = (Offset + row) / cachedConfiguration.numberOfRows
-        }
-        
-        let indexPathToFind = NSIndexPath(forItem: convertedRow, inSection: convertedSection)
+        let convertedRow = (row * MAX_NUMBER_OF_DAYS_IN_WEEK) + column  
+        let indexPathToFind = NSIndexPath(forItem: convertedRow, inSection: currentSectionPage)
         if let  date = dateFromPath(indexPathToFind) {
             let stateOfCell = cellStateFromIndexPath(indexPathToFind, withDate: date)
             return stateOfCell
@@ -57,10 +39,10 @@ extension JTAppleCalendarView {
     /// - returns:
     ///     - startDate: The start date of the current section
     ///     - endDate: The end date of the current section
-    public func currentCalendarDateSegment() -> (startDate: NSDate, endDate: NSDate) {
+    public func currentCalendarDateSegment() -> (dateRange:(start: NSDate, end: NSDate), month: Int) {
         guard let dateSegment = dateFromSection(currentSectionPage) else {
             assert(false, "Error in currentCalendarDateSegment method. Report this issue to Jay on github.")
-            return (NSDate(), NSDate())
+            return ((NSDate(), NSDate()), 0)
         }
         return dateSegment
     }
@@ -126,18 +108,62 @@ extension JTAppleCalendarView {
     /// - Parameter startDate: Date to start the selection from
     /// - Parameter endDate: Date to end the selection from
     /// - Parameter triggerDidSelectDelegate: Triggers the delegate function only if the value is set to true. Sometimes it is necessary to setup some dates without triggereing the delegate e.g. For instance, when youre initally setting up data in your viewDidLoad
-    public func selectDates(from startDate:NSDate, to endDate:NSDate, triggerSelectionDelegate: Bool = true) {
-        selectDates(generateDateRange(from: startDate, to: endDate), triggerSelectionDelegate: triggerSelectionDelegate)
+    /// - Parameter keepSelectionIfMultiSelectionAllowed: This is only applicable in allowedMultiSelection = true. This overrides the default toggle behavior of selection. If true, selected cells will remain selected.
+    public func selectDates(from startDate:NSDate, to endDate:NSDate, triggerSelectionDelegate: Bool = true, keepSelectionIfMultiSelectionAllowed: Bool = false) {
+        selectDates(generateDateRange(from: startDate, to: endDate), triggerSelectionDelegate: triggerSelectionDelegate, keepSelectionIfMultiSelectionAllowed: keepSelectionIfMultiSelectionAllowed)
     }
     
     /// Select a date-cells
     /// - Parameter date: The date-cell with this date will be selected
     /// - Parameter triggerDidSelectDelegate: Triggers the delegate function only if the value is set to true. Sometimes it is necessary to setup some dates without triggereing the delegate e.g. For instance, when youre initally setting up data in your viewDidLoad
-    public func selectDates(dates: [NSDate], triggerSelectionDelegate: Bool = true) {
+    public func selectDates(dates: [NSDate], triggerSelectionDelegate: Bool = true, keepSelectionIfMultiSelectionAllowed: Bool = false) {
         var allIndexPathsToReload: [NSIndexPath] = []
         var validDatesToSelect = dates
         // If user is trying to select multiple dates with multiselection disabled, then only select the last object
         if !calendarView.allowsMultipleSelection && dates.count > 0 { validDatesToSelect = [dates.last!] }
+        
+        let addToIndexSetToReload = {(indexPath: NSIndexPath)->Void in
+            if !allIndexPathsToReload.contains(indexPath) { allIndexPathsToReload.append(indexPath) } // To avoid adding the  same indexPath twice.
+        }
+        
+        let selectTheDate = {(indexPath: NSIndexPath, date: NSDate) -> Void in
+            self.calendarView.selectItemAtIndexPath(indexPath, animated: false, scrollPosition: .None)
+            addToIndexSetToReload(indexPath)
+            // If triggereing is enabled, then let their delegate handle the reloading of view, else we will reload the data
+            if triggerSelectionDelegate {
+                self.internalCollectionView(self.calendarView, didSelectItemAtIndexPath: indexPath)
+            } else { // Although we do not want the delegate triggered, we still want counterpart cells to be selected
+                
+                // Because there is no triggering of the delegate, the cell will not be added to selection and it will not be reloaded. We need to do this here
+                self.addCellToSelectedSetIfUnselected(indexPath, date: date)
+                let cellState = self.cellStateFromIndexPath(indexPath, withDate: date)
+                if let aSelectedCounterPartIndexPath = self.selectCounterPartCellIndexPathIfExists(indexPath, date: date, dateOwner: cellState.dateBelongsTo) {
+                    // If there was a counterpart cell then it will also need to be reloaded
+                    addToIndexSetToReload(aSelectedCounterPartIndexPath)
+                }
+            }
+        }
+        
+        let deSelectTheDate = { (oldIndexPath: NSIndexPath) -> Void in
+            addToIndexSetToReload(oldIndexPath)
+            if let index = self.theSelectedIndexPaths.indexOf(oldIndexPath) {
+                let oldDate = self.theSelectedDates[index]
+                self.calendarView.deselectItemAtIndexPath(oldIndexPath, animated: false)
+                self.theSelectedIndexPaths.removeAtIndex(index)
+                self.theSelectedDates.removeAtIndex(index)
+                
+                // If delegate triggering is enabled, let the delegate function handle the cell
+                if triggerSelectionDelegate {
+                    self.internalCollectionView(self.calendarView, didDeselectItemAtIndexPath: oldIndexPath)
+                } else { // Although we do not want the delegate triggered, we still want counterpart cells to be deselected
+                    let cellState = self.cellStateFromIndexPath(oldIndexPath, withDate: oldDate)
+                    if let anUnselectedCounterPartIndexPath = self.deselectCounterPartCellIndexPath(oldIndexPath, date: oldDate, dateOwner: cellState.dateBelongsTo) {
+                        // If there was a counterpart cell then it will also need to be reloaded
+                        addToIndexSetToReload(anUnselectedCounterPartIndexPath)
+                    }
+                }
+            }
+        }
         
         for date in validDatesToSelect {
             let components = self.calendar.components([.Year, .Month, .Day],  fromDate: date)
@@ -150,44 +176,6 @@ extension JTAppleCalendarView {
             // If the date path youre searching for, doesnt exist, then return
             if pathFromDates.count < 0 { continue }
             let sectionIndexPath = pathFromDates[0]
-            let selectTheDate = {
-                self.calendarView.selectItemAtIndexPath(sectionIndexPath, animated: false, scrollPosition: .None)
-                // If triggereing is enabled, then let their delegate handle the reloading of view, else we will reload the data
-                if triggerSelectionDelegate {
-                    self.collectionView(self.calendarView, didSelectItemAtIndexPath: sectionIndexPath)
-                } else { // Although we do not want the delegate triggered, we still want counterpart cells to be selected
-                    
-                    // Because there is no triggering of the delegate, the cell will not be added to selection and it will not be reloaded. We need to do this here
-                    self.addCellToSelectedSetIfUnselected(sectionIndexPath, date: date)
-                    allIndexPathsToReload.append(sectionIndexPath)
-                    let cellState = self.cellStateFromIndexPath(sectionIndexPath, withDate: date)
-                    if let aSelectedCounterPartIndexPath = self.selectCounterPartCellIndexPathIfExists(sectionIndexPath, date: date, dateOwner: cellState.dateBelongsTo) {
-                        // If there was a counterpart cell then it will also need to be reloaded
-                        allIndexPathsToReload.append(aSelectedCounterPartIndexPath)
-                    }
-                }
-            }
-            
-            let deSelectTheDate = { (oldIndexPath: NSIndexPath) -> Void in
-                if !allIndexPathsToReload.contains(oldIndexPath) { allIndexPathsToReload.append(oldIndexPath) } // To avoid adding the  same indexPath twice.
-                if let index = self.theSelectedIndexPaths.indexOf(oldIndexPath) {
-                    let oldDate = self.theSelectedDates[index]
-                    self.calendarView.deselectItemAtIndexPath(oldIndexPath, animated: false)
-                    self.theSelectedIndexPaths.removeAtIndex(index)
-                    self.theSelectedDates.removeAtIndex(index)
-                    
-                    // If delegate triggering is enabled, let the delegate function handle the cell
-                    if triggerSelectionDelegate {
-                        self.collectionView(self.calendarView, didDeselectItemAtIndexPath: oldIndexPath)
-                    } else { // Although we do not want the delegate triggered, we still want counterpart cells to be deselected
-                        let cellState = self.cellStateFromIndexPath(oldIndexPath, withDate: oldDate)
-                        if let anUnselectedCounterPartIndexPath = self.deselectCounterPartCellIndexPath(oldIndexPath, date: oldDate, dateOwner: cellState.dateBelongsTo) {
-                            // If there was a counterpart cell then it will also need to be reloaded
-                             allIndexPathsToReload.append(anUnselectedCounterPartIndexPath)
-                        }
-                    }
-                }
-            }
             
             // Remove old selections
             if self.calendarView.allowsMultipleSelection == false { // If single selection is ON
@@ -198,22 +186,28 @@ extension JTAppleCalendarView {
                 
                 // Add new selections
                 // Must be added here. If added in delegate didSelectItemAtIndexPath
-                selectTheDate()
-            } else { // If multiple selection is on. Multiple selection behaves differently to singleselection. It behaves like a toggle.
-                
+                selectTheDate(sectionIndexPath, date)
+            } else { // If multiple selection is on. Multiple selection behaves differently to singleselection. It behaves like a toggle. unless keepSelectionIfMultiSelectionAllowed is true.
+                // If user wants to force selection if multiselection is enabled, then removed the selected dates from generated dates
+                if keepSelectionIfMultiSelectionAllowed {
+                    if selectedDates.contains(calendar.startOfDayForDate(date)) {
+                        addToIndexSetToReload(sectionIndexPath)
+                        continue // Do not deselect or select the cell. Just add it to be reloaded
+                    }
+                }
                 if self.theSelectedIndexPaths.contains(sectionIndexPath) { // If this cell is already selected, then deselect it
                     deSelectTheDate(sectionIndexPath)
                 } else {
                     // Add new selections
                     // Must be added here. If added in delegate didSelectItemAtIndexPath
-                    selectTheDate()
+                    selectTheDate(sectionIndexPath, date)
                 }
             }
         }
         
         
         // If triggering was false, although the selectDelegates weren't called, we do want the cell refreshed. Reload to call itemAtIndexPath
-        if triggerSelectionDelegate == false && allIndexPathsToReload.count > 0 {
+        if /*triggerSelectionDelegate == false &&*/ allIndexPathsToReload.count > 0 {
             delayRunOnMainThread(0.0) {
                 self.batchReloadIndexPaths(allIndexPathsToReload)
             }
@@ -260,13 +254,11 @@ extension JTAppleCalendarView {
                 self.scrollInProgress = false
                 return
             }
-            
             let retrievedPathsFromDates = self.pathsFromDates([date])
-            
             if retrievedPathsFromDates.count > 0 {
                 let sectionIndexPath =  self.pathsFromDates([date])[0]
                 var position: UICollectionViewScrollPosition = self.direction == .Horizontal ? .Left : .Top
-                if !self.pagingEnabled {
+                if !self.scrollingMode.pagingIsEnabled() {
                     if let validPosition:UICollectionViewScrollPosition = preferredScrollPosition {
                         if self.direction == .Horizontal {
                             if validPosition == .Left || validPosition == .Right || validPosition == .CenteredHorizontally {
@@ -299,7 +291,7 @@ extension JTAppleCalendarView {
                     }
                 }
                 
-                if self.pagingEnabled {
+                if self.scrollingMode.pagingIsEnabled() {
                     if self.registeredHeaderViews.count > 0 {
                         // If both paging and header is on, then scroll to the actual date
                         // If direction is vertical and user has a custom size that is at least the size of the collectionview. 
@@ -326,6 +318,8 @@ extension JTAppleCalendarView {
                         self.scrollInProgress = false
                     }
                 })
+            } else {
+                self.scrollInProgress = false
             }
         })
     }
@@ -350,7 +344,7 @@ extension JTAppleCalendarView {
         var currentDate = startDate
         repeat {
             returnDates.append(currentDate)
-            currentDate = calendar.dateByAddingUnit(.Day, value: 1, toDate: currentDate, options: NSCalendarOptions.MatchNextTime)!
+            currentDate = calendar.startOfDayForDate(calendar.dateByAddingUnit(.Day, value: 1, toDate: currentDate, options: [])!)
         } while currentDate <= endDate
         return returnDates
     }

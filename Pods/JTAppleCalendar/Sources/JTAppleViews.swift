@@ -2,7 +2,7 @@
 //  JTAppleDayCellView.swift
 //  testApplicationCalendar
 //
-//  Created by Jay Thomas on 2016-03-05.
+//  Created by JayT on 2016-03-05.
 //  Copyright © 2016 OS-Tech. All rights reserved.
 //
 

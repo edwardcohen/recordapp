@@ -1,24 +1,24 @@
 ![JTAppleCalendar](Images/JTAppleCalendar.jpg)
 
-The final iOS calendar control you'll ever try
+An iOS calendar control. Written in swift.
 
 
-Inspiration for this control was made possible by Michael @ Karmadust. Want to know how the calendar control works inside out? [Check out his KDCalendar tutorial.](http://blog.karmadust.com/lets-create-a-calendar-using-a-uicollectionview/)
 
 
 [![CI Status](http://img.shields.io/travis/patchthecode/JTAppleCalendar.svg?style=flat)](https://travis-ci.org/patchthecode/JTAppleCalendar) [![Version](https://img.shields.io/cocoapods/v/JTAppleCalendar.svg?style=flat)](http://cocoapods.org/pods/JTAppleCalendar) [![License](https://img.shields.io/cocoapods/l/JTAppleCalendar.svg?style=flat)](http://cocoapods.org/pods/JTAppleCalendar) [![Platform](https://img.shields.io/cocoapods/p/JTAppleCalendar.svg?style=flat)](http://cocoapods.org/pods/JTAppleCalendar)
-[![](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_74x21.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=7YVDC37NDZP8S)
+[![](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_74x21.png)](https://salt.bountysource.com/teams/jtapplecalendar)
 
 ### **Screenshots**
 The look of this calendar is up to the developer. Check out what people have developed with this library and also post your own images [at this link](https://github.com/patchthecode/JTAppleCalendar/issues/2). A sample iOS application is also included in this project's [Github Repository](https://github.com/patchthecode/JTAppleCalendar) to give you an idea of what you can do.
 
 * Downloaded and liked this calendar's ease of use?
-* Then don't forget to leave a ★ Star rating on Github. It's needed to make this control #1 :)
+* Then don't forget to leave a ★ Star rating on [Github](https://github.com/patchthecode/JTAppleCalendar). It's needed to make this control #1 :)
 * Also, [Support](https://salt.bountysource.com/teams/jtapplecalendar) is not manditory, but will be much appreciated. Let's keep ~~OpenSource~~ good OpenSource projects alive.
 
 ### **Features**
 ---
 
+- [x] Range selection - select dates in a range. The design is entirely up to you.
 - [x] Boundary dates - limit the calendar date range
 - [x] Week/month mode - show 1 row of weekdays. Or 2, 3 or 6
 - [x] Custom cells - make your day-cells look however you want, with any functionality you want
@@ -64,12 +64,15 @@ The following structure was returned when a cell is about to be displayed.
 #### User functions
 
 ```swift
+    public func generateDateRange(from startDate: NSDate, to endDate:NSDate)-> [NSDate]
     public func reloadData()
     public func reloadDates(dates: [NSDate])
     public func scrollToNextSegment() 
     public func scrollToPreviousSegment()
     public func scrollToDate()
     public func selectDates()
+    public func selectDates(from startDate:NSDate, to endDate:NSDate)
+    public func cellStatusForDate(date: NSDate)-> CellState?
     public func cellStatusForDateAtRow(row: Int, column: Int) -> CellState?
     public func currentCalendarDateSegment() -> (startDate: NSDate, endDate: NSDate)
     public func scrollToHeaderForDate(date: NSDate)
@@ -78,16 +81,14 @@ The following structure was returned when a cell is about to be displayed.
 #### Properties you can configure
 ```swift
 // Note: You do not need to configure your calendar with this if it is already the default
-calendarView.direction = .Horizontal                       // default is horizontal
-calendarView.numberOfRowsPerMonth                          // default is 6. This is now setup in the configure Datasource Delegate Methhod
-calendarView.cellInset = CGPoint(x: 0, y: 0)               // default is (3,3)
-calendarView.allowsMultipleSelection = false               // default is false
-calendarView.bufferTop = 0                                 // default is 0. - still work in progress
-calendarView.bufferBottom = 0                              // default is 0. - still work in progress
-calendarView.firstDayOfWeek = .Sunday                      // default is Sunday
-calendarView.scrollEnabled = true                          // default is true
-calendarView.pagingEnabled = true                          // default is true
-calendarView.scrollResistance = 0.75                       // default is 0.75 - this is only applicable when paging is not enabled
+calendarView.direction = .Horizontal                                 // default is horizontal
+calendarView.cellInset = CGPoint(x: 0, y: 0)                         // default is (3,3)
+calendarView.allowsMultipleSelection = false                         // default is false
+calendarView.firstDayOfWeek = .Sunday                                // default is Sunday
+calendarView.scrollEnabled = true                                    // default is true
+calendarView.scrollingMode = .StopAtEachCalendarFrameWidth           // default is .StopAtEachCalendarFrameWidth
+calendarView.itemSize = nil                                          // default is nil. Use a value here to change the size of your cells
+calendarView.rangeSelectionWillBeUsed = false                        // default is false
 ```
 
 Do you have any other questions?. If you are trying to bend heaven and earth to do something complicated with this calendar, then chances are there is already an easy way for it to be done. So [Opening an issue](https://github.com/patchthecode/JTAppleCalendar/issues/new) might be a good idea.
@@ -139,7 +140,7 @@ $ pod install
 
 ## Author
 
-JayT, patchthecode@gmail.com
+JayT, patchthecode@gmail.com <-- Sending me emails will not get you a swift response. I check it once every 2 weeks or so. Create a new issue [here on github](https://github.com/patchthecode/JTAppleCalendar/issues) if you need help.
 
 ## License
 

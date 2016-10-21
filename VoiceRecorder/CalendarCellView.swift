@@ -15,8 +15,8 @@ class CalendarCellView: JTAppleDayCellView {
     @IBOutlet var dayLabel: UILabel!
     @IBOutlet var dotLabel: UILabel!
     
-    let textSelectedColor = UIColor.whiteColor()
-    let textDeselectedColor = UIColor.whiteColor()
+    let textSelectedColor = UIColor(red:0x00/255, green:0x7A/255, blue:0xFF/255, alpha:1.0)
+    let textDeselectedColor = UIColor(red:0x00/255, green:0x7A/255, blue:0xFF/255, alpha:1.0)
     let previousMonthTextColor = UIColor.grayColor()
     lazy var todayDate : String = {
         [weak self] in

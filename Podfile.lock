@@ -1,12 +1,15 @@
 PODS:
-  - JTAppleCalendar (4.1.3)
+  - JTAppleCalendar (5.0.1)
+  - SwiftSiriWaveformView (0.0.3)
 
 DEPENDENCIES:
   - JTAppleCalendar
+  - SwiftSiriWaveformView
 
 SPEC CHECKSUMS:
-  JTAppleCalendar: 8636015a007b5dfca1fa52d34cddcecd87ef47b8
+  JTAppleCalendar: cb2417b1f3367d1993e31720a663646742139a5c
+  SwiftSiriWaveformView: 884eafc6efa345555ecf1fcb1baaa2cef7e185dc
 
-PODFILE CHECKSUM: 44b3224fc52de584a911ba31af526d2fe0500262
+PODFILE CHECKSUM: 7a5db553d933d8d1ef6a74222a1478cebaee213e
 
-COCOAPODS: 1.0.1
+COCOAPODS: 1.0.0

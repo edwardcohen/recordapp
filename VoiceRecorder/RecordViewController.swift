@@ -9,10 +9,11 @@
 import UIKit
 import AVFoundation
 import CloudKit
-import CoreData
 import CoreLocation
+import CoreData
+import SwiftSiriWaveformView
 
-class RecordViewController: UIViewController, UIViewControllerTransitioningDelegate, AVAudioRecorderDelegate, CLLocationManagerDelegate {
+class RecordViewController: UIViewController, UIViewControllerTransitioningDelegate, AVAudioRecorderDelegate, CLLocationManagerDelegate, UITextFieldDelegate, PulleyPrimaryContentControllerDelegate {
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var chevronButton: UIButton!
     @IBOutlet var backgroundImage: UIImageView!
@@ -23,6 +24,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     @IBOutlet var recordProgress: UIProgressView!
     @IBOutlet var spinner: UIActivityIndicatorView!
     @IBOutlet var tagView: UICollectionView!
+    @IBOutlet var audioWaveformView: SwiftSiriWaveformView!
     
     var recordingSession: AVAudioSession!
     var audioRecorder: AVAudioRecorder!
@@ -47,10 +49,23 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     var recordingTimer: NSTimer!
     var timerCount: Int!
     
+    var displayLink:CADisplayLink!
+    
     let customPresentAnimationController = CustomPresentAnimationController()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        titleText.delegate = self
+        
+        audioWaveformView.density = 1.0
+        audioWaveformView.amplitude = 0
+        audioWaveformView.waveColor = UIColor.whiteColor()
+        audioWaveformView.primaryLineWidth = 3.0
+        audioWaveformView.secondaryLineWidth = 1.0
+        audioWaveformView.alpha = 0
+        displayLink = CADisplayLink(target: self, selector: #selector(updateMeters))
+        displayLink.addToRunLoop(NSRunLoop.currentRunLoop(), forMode: NSRunLoopCommonModes)
         
         spinner.hidesWhenStopped = true
         spinner.center = view.center
@@ -58,12 +73,12 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
 
         backgroundImage.userInteractionEnabled = true
         
-        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped))
-        doubleTap.numberOfTapsRequired = 2
-        backgroundImage.addGestureRecognizer(doubleTap)
+//        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped))
+//        doubleTap.numberOfTapsRequired = 2
+//        backgroundImage.addGestureRecognizer(doubleTap)
 
-        let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTapped))
-        backgroundImage.addGestureRecognizer(singleTap)
+//        let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTapped))
+//        backgroundImage.addGestureRecognizer(singleTap)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(longPressed))
         backgroundImage.addGestureRecognizer(longPress)
@@ -103,15 +118,41 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         super.didReceiveMemoryWarning()
     }
     
-    @IBAction func handleDelete() {
-        if recordState == RecordState.Done {
-            tags.removeAll()
-            tags.append("+")
-            tagView.reloadData()
-            marks.removeAll()
-            recordState = RecordState.None
-            updateUI()
+    // MARK : UITextFieldDelegate
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        titleText.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidBeginEditing(textField: UITextField) {
+        if textField.text == "Title" {
+            textField.text = ""
         }
+    }
+    
+    func updateMeters() {
+        if audioRecorder != nil {
+            audioRecorder.updateMeters()
+            let normalizedValue:CGFloat = 1.0 - pow(10, CGFloat(audioRecorder.averagePowerForChannel(0))/20)
+            audioWaveformView.amplitude = normalizedValue
+        }
+    }
+    
+    @IBAction func handleDelete() {
+        let deleteAlert = UIAlertController(title: "Delete Record", message: "Are you sure you want to delete this record?", preferredStyle: .Alert)
+        deleteAlert.addAction(UIAlertAction(title: "Cancel", style: .Cancel, handler: nil))
+        deleteAlert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: { action in
+            if self.recordState == RecordState.Pause {
+                self.tags.removeAll()
+                self.tags.append("+")
+                self.tagView.reloadData()
+                self.marks.removeAll()
+                self.recordState = RecordState.None
+                self.titleText.text = "Title"
+                self.updateUI()
+            }
+        }))
+        presentViewController(deleteAlert, animated: true, completion: nil)
     }
     
     func showErrorMessage(message: String) {
@@ -130,15 +171,33 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             
             if recordState == RecordState.None {
                 startRecording()
-                recordState = RecordState.OneTime
+                if self.displayLink.paused == true {
+                    self.displayLink.paused = false
+                }
+//                recordState = RecordState.OneTime
+                recordState = RecordState.Continuous
+                updateUI()
+            } else if recordState == RecordState.Pause {
+                self.displayLink.paused = false
+                marks.append(timerCount)
+                audioRecorder.record()
+                recordingTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(timerUpdate), userInfo: nil, repeats: true)
+                timerUpdate()
+                recordState = RecordState.Continuous
                 updateUI()
             }
         case .Ended, .Cancelled:
             print("end long press")
             
-            if recordState == RecordState.OneTime {
-                stopRecording()
-                recordState = RecordState.Done
+//            if recordState == RecordState.OneTime {
+//                stopRecording()
+//                recordState = RecordState.Done
+//            }
+            if recordState == RecordState.Continuous {
+                self.displayLink.paused = true
+                audioRecorder.pause()
+                recordingTimer.invalidate()
+                recordState = RecordState.Pause
                 updateUI()
             }
         default:
@@ -183,7 +242,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     func updateUI() {
         switch recordState {
         case RecordState.None:
-            backgroundImage.image = UIImage(named: "blue_background.png")
+            self.view.backgroundColor = UIColor(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255, alpha: 1.0)
             recordButton.alpha = 1.0
             chevronButton.alpha = 1.0
             timerLabel.alpha = 0.0
@@ -193,7 +252,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             recordProgress.alpha = 0.0
             tagView.alpha = 0.0
         case RecordState.OneTime, RecordState.Continuous:
-            backgroundImage.image = UIImage(named: "red_background.png")
+            self.view.backgroundColor = UIColor(red: 0xFF/255, green: 0x3B/255, blue: 0x30/255, alpha: 1.0)
             recordButton.alpha = 0.0
             chevronButton.alpha = 0.0
             timerLabel.alpha = 1.0
@@ -202,18 +261,20 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             titleText.alpha = 0.0
             recordProgress.alpha = 1.0
             tagView.alpha = 0.0
+            audioWaveformView.alpha = 1.0
         case RecordState.Done:
-            backgroundImage.image = UIImage(named: "blue_background.png")
-            recordButton.alpha = 0.0
+            self.view.backgroundColor = UIColor(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255, alpha: 1.0)
+            recordButton.alpha = 1.0
             chevronButton.alpha = 0.0
-            timerLabel.alpha = 1.0
-            doneButton.alpha = 1.0
-            deleteButton.alpha = 1.0
-            titleText.alpha = 1.0
-            recordProgress.alpha = 1.0
-            tagView.alpha = 1.0
+            timerLabel.alpha = 0.0
+            doneButton.alpha = 0.0
+            deleteButton.alpha = 0.0
+            titleText.alpha = 0.0
+            recordProgress.alpha = 0.0
+            tagView.alpha = 0.0
+            audioWaveformView.alpha = 0.0
         case RecordState.Pause:
-            backgroundImage.image = UIImage(named: "red_background.png")
+            self.view.backgroundColor = UIColor(red: 0x00/255, green: 0x7A/255, blue: 0xFF/255, alpha: 1.0)
             recordButton.alpha = 0.0
             chevronButton.alpha = 0.0
             timerLabel.alpha = 1.0
@@ -222,6 +283,7 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
             titleText.alpha = 1.0
             recordProgress.alpha = 1.0
             tagView.alpha = 1.0
+            audioWaveformView.alpha = 0.0
         }
     }
     
@@ -232,7 +294,8 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     }
     
     func startRecording() {
-        audioFileURL = getDocumentsDirectoryURL().URLByAppendingPathComponent("recording.m4a")
+        let filename = NSUUID().UUIDString + ".m4a"
+        audioFileURL = getDocumentsDirectoryURL().URLByAppendingPathComponent(filename)
         
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -242,6 +305,8 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         ]
         
         do {
+            try recordingSession.setCategory(AVAudioSessionCategoryRecord)
+            try recordingSession.setActive(true)
             audioRecorder = try AVAudioRecorder(URL: audioFileURL!, settings: settings)
             audioRecorder.delegate = self
             audioRecorder.prepareToRecord()
@@ -293,7 +358,14 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
     
     func getQuickLocationUpdate() {
         // Request location authorization
-        self.locationManager.requestWhenInUseAuthorization()
+        if CLLocationManager.locationServicesEnabled() {
+            if self.locationManager.respondsToSelector(#selector(CLLocationManager.requestWhenInUseAuthorization)) {
+                self.locationManager.requestWhenInUseAuthorization()
+            } else {
+                self.locationManager.startUpdatingLocation()
+            }
+        }
+//        self.locationManager.requestWhenInUseAuthorization()
         
         // Request a location update
         self.locationManager.requestLocation()
@@ -310,35 +382,130 @@ class RecordViewController: UIViewController, UIViewControllerTransitioningDeleg
         print("Error while updating location " + error.localizedDescription)
     }
     
-    @IBAction func doneTapped() {
-        if audioRecorder != nil {
-            stopRecording()
+    func locationManager(manager: CLLocationManager, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+        switch status {
+        case .NotDetermined:
+            locationManager.requestAlwaysAuthorization()
+            break
+        case .AuthorizedWhenInUse:
+            locationManager.startUpdatingLocation()
+            break
+        case .AuthorizedAlways:
+            locationManager.startUpdatingLocation()
+            break
+        default:
+            break
         }
+    }
+    
+    @IBAction func doneTapped() {
+        let dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "MMM dd, yyyy"
+        let now = dateFormatter.stringFromDate(NSDate())
+        if titleText.text == "Title" {
+            titleText.text = ""
+        }
+        let title = !((titleText.text?.isEmpty)!) ? titleText.text : now
+        let length = timerCount - 1 < 0 ? 0 : timerCount - 1
+        let tags = self.tags.filter() { $0 != "+" }
+        let location = currentLocation != nil ? currentLocation! : CLLocation()
+        let date = NSDate()
+        let marks = self.marks
+        let audio = audioFileURL!
         
+//        let voice = Voice(title: title, length: length, date: date, tags: tags, location: location, marks: marks, audio: audio)
+        
+//        saveRecordToCloud(voice)
+
+        if recordState == RecordState.Pause {
+//            self.displayLink.invalidate()
+            stopRecording()
+            recordState = RecordState.Done
+            updateUI()
+        }
+
         spinner.startAnimating()
         
+        var voice:Voice!
+        
         if let managedObjectContext = (UIApplication.sharedApplication().delegate as? AppDelegate)?.managedObjectContext {
-            let voice = NSEntityDescription.insertNewObjectForEntityForName("Voice", inManagedObjectContext: managedObjectContext) as! Voice
-            voice.title = titleText.text
-            voice.length = timerCount
-            voice.date = NSDate()
-            voice.marks = self.marks
-            voice.tags = self.tags.filter() { $0 != "+" }
-            voice.location = currentLocation!
-            voice.audio = NSData(contentsOfURL: audioFileURL!)!
+            voice = NSEntityDescription.insertNewObjectForEntityForName("Voice", inManagedObjectContext: managedObjectContext) as! Voice
+            voice.title = title
+            voice.tags = tags
+            voice.marks = marks
+            voice.length = length
+            voice.location = location
+            voice.date = date
+            voice.audio = audio
             
             do {
                 try managedObjectContext.save()
+                self.spinner.stopAnimating()
+                print("Successed in saving records to the core data")
             } catch {
-                print(error)
+                print("Failed to save record to the core data: \(error)")
                 return
             }
         }
         
-        NSOperationQueue.mainQueue().addOperationWithBlock() {
-            self.spinner.stopAnimating()
-            self.performSegueWithIdentifier("doneRecording", sender: self)
+        if recordState == RecordState.Done {
+            self.tags.removeAll()
+            self.tags.append("+")
+            tagView.reloadData()
+            self.marks.removeAll()
+            recordState = RecordState.None
+            updateUI()
+            titleText.text = "Title"
+            self.displayLink.paused = false
         }
+    }
+    
+    // MARK: - CloudKit Methods
+    
+    func saveRecordToCloud(voice: Voice) -> Void {
+        spinner.startAnimating()
+        
+        // Prepare the record to save
+        let record = CKRecord(recordType: "Voice")
+        record.setValue(voice.title, forKey: "title")
+        record.setValue(voice.length, forKey: "length")
+        record.setValue(voice.tags, forKey: "tags")
+        record.setValue(voice.location, forKey: "location")
+        record.setValue(voice.marks, forKey: "marks")
+        record.setValue(voice.date, forKey: "date")
+        
+        // Create audio asset for upload
+        let audioAsset = CKAsset(fileURL: voice.audio)
+        record.setValue(audioAsset, forKey: "audio")
+        
+        // Get the Public iCloud Database
+        let publicDatabase = CKContainer.defaultContainer().publicCloudDatabase
+        
+        let saveRecordsOperation = CKModifyRecordsOperation()
+        saveRecordsOperation.recordsToSave = [record]
+        saveRecordsOperation.savePolicy = .AllKeys
+        saveRecordsOperation.queuePriority = .VeryHigh
+
+        saveRecordsOperation.modifyRecordsCompletionBlock = { savedRecords, deletedRecordIDs, error in
+            if (error == nil) {
+                // Remove temp file
+                do {
+                    try NSFileManager.defaultManager().removeItemAtPath(voice.audio.path!)
+                    print("Saved record to the cloud.")
+                    
+                    NSOperationQueue.mainQueue().addOperationWithBlock() {
+                        self.spinner.stopAnimating()
+                        self.performSegueWithIdentifier("doneRecording", sender: self)
+                    }
+                } catch {
+                    print("Failed to delete temparary file.")
+                }
+            } else {
+                print("Failed to save record to the cloud: \(error)")
+            }
+        }
+
+        publicDatabase.addOperation(saveRecordsOperation)
     }
 }
 
@@ -366,7 +533,7 @@ extension RecordViewController: UICollectionViewDelegate, UICollectionViewDataSo
         if tags[indexPath.item] == "+" {
             var tagTextField: UITextField?
             
-            let alertController = UIAlertController(title: "Add TAG", message: nil, preferredStyle: .Alert)
+            let alertController = UIAlertController(title: "Add Tag", message: nil, preferredStyle: .Alert)
             let ok = UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
                 if let tagText = tagTextField!.text {
                     self.tags.insert(tagText, atIndex: self.tags.count-1)
@@ -374,13 +541,25 @@ extension RecordViewController: UICollectionViewDelegate, UICollectionViewDataSo
                 }
             })
             let cancel = UIAlertAction(title: "Cancel", style: .Default, handler: nil)
-            alertController.addAction(ok)
             alertController.addAction(cancel)
+            alertController.addAction(ok)
             alertController.addTextFieldWithConfigurationHandler { (textField) -> Void in
                 tagTextField = textField
-                tagTextField!.placeholder = "TAG"
+                tagTextField!.placeholder = "Tag"
+                tagTextField?.autocapitalizationType = UITextAutocapitalizationType.Sentences
             }
             presentViewController(alertController, animated: true, completion: nil)
         }
     }
 }
+
+//extension UIViewController {
+//    func hideKeyboardWhenTappedAround() {
+//        let tap:UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+//        view.addGestureRecognizer(tap)
+//    }
+//    
+//    func dismissKeyboard() {
+//        view.endEditing(true)
+//    }
+//}

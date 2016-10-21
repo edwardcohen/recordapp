@@ -2,7 +2,7 @@
 //  JTAppleDayCell.swift
 //  JTAppleCalendar
 //
-//  Created by Jay Thomas on 2016-03-01.
+//  Created by JayT on 2016-03-01.
 //  Copyright © 2016 OS-Tech. All rights reserved.
 //
 

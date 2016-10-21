@@ -2,7 +2,7 @@
 //  GlobalFunctionsAndExtensions.swift
 //  Pods
 //
-//  Created by Jeron Thomas on 2016-06-26.
+//  Created by JayT on 2016-06-26.
 //
 //
 
@@ -31,8 +31,6 @@ public func ==(lhs: NSDate, rhs: NSDate) -> Bool {
 public func <(lhs: NSDate, rhs: NSDate) -> Bool {
     return lhs.compare(rhs) == .OrderedAscending
 }
-
-
 
 extension NSDate: Comparable { }
 extension NSDate {

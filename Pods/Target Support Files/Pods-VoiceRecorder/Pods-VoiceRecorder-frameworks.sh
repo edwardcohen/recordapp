@@ -85,7 +85,9 @@ strip_invalid_archs() {
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "$BUILT_PRODUCTS_DIR/JTAppleCalendar/JTAppleCalendar.framework"
+  install_framework "$BUILT_PRODUCTS_DIR/SwiftSiriWaveformView/SwiftSiriWaveformView.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "$BUILT_PRODUCTS_DIR/JTAppleCalendar/JTAppleCalendar.framework"
+  install_framework "$BUILT_PRODUCTS_DIR/SwiftSiriWaveformView/SwiftSiriWaveformView.framework"
 fi

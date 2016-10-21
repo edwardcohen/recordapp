@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "F90143F8EE558D23D4D945DD4D02F63F7912CD27",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "CF9A1C11266C7A34C7F97F1258FA85DE397E4907" : 0,
+    "F90143F8EE558D23D4D945DD4D02F63F7912CD27" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4265C2FD-E46A-467A-897B-3738258FA5E8",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "CF9A1C11266C7A34C7F97F1258FA85DE397E4907" : "",
+    "F90143F8EE558D23D4D945DD4D02F63F7912CD27" : "taprecord\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "VoiceRecorder",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "VoiceRecorder.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/iqdesk\/aviv-vip-taxi-iphone.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "CF9A1C11266C7A34C7F97F1258FA85DE397E4907"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/alexei-laine\/taprecord.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F90143F8EE558D23D4D945DD4D02F63F7912CD27"
+    }
+  ]
+}

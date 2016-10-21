@@ -2,8 +2,8 @@
 //  VoiceDetailViewController.swift
 //  VoiceRecorder
 //
-//  Created by Eddie Cohen & Jason Toff on 8/5/16.
-//  Copyright © 2016 zelig. All rights reserved.
+//  Created by developer on 8/5/16.
+//  Copyright © 2016 CocoaPods. All rights reserved.
 //
 
 import UIKit
@@ -15,7 +15,7 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
 
     var voice: Voice!
     
-    var audioPlayer: AVAudioPlayer!
+    var audioPlayer: AVAudioPlayer?
     
     var timer: NSTimer?
     
@@ -45,13 +45,23 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
         do {
             try! AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
             try! AVAudioSession.sharedInstance().setActive(true)
-            try audioPlayer = AVAudioPlayer(data: voice.audio, fileTypeHint: AVFileTypeAppleM4A)
+            let audioFileName = voice.audio.lastPathComponent
+            let documentDirectory = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+//            print("DocumentDirectory-\(documentDirectory)")
+            let soundFileURL = documentDirectory.URLByAppendingPathComponent(audioFileName!)
+//            print("SoundFileURL-\(soundFileURL)")
+            let fileManager = NSFileManager.defaultManager()
+            if fileManager.fileExistsAtPath(soundFileURL.path!) {
+                print("File Avaliable")
+                try audioPlayer = AVAudioPlayer(contentsOfURL: soundFileURL, fileTypeHint: AVFileTypeAppleM4A)
+                audioPlayer!.prepareToPlay()
+                audioPlayer!.volume = 0.5
+            } else {
+                print("File Not Avaliable")
+            }
         } catch {
             print("error initializing AVAudioPlayer: \(error)")
         }
-
-        audioPlayer.prepareToPlay()
-        audioPlayer.volume = 0.5
         
         voice.tags?.append("+")
         
@@ -70,13 +80,15 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
     }
     
     @IBAction func playVoice() {
-        audioPlayer.play()
-        startTimer()
-        audioPlayer.delegate = self
+        if let player = audioPlayer {
+            player.play()
+            startTimer()
+            player.delegate = self
+        }
     }
 
     func audioPlayerDidFinishPlaying(player: AVAudioPlayer, successfully flag: Bool) {
-        audioPlayer.stop()
+        audioPlayer!.stop()
         timer?.invalidate()
     }
     
@@ -86,8 +98,10 @@ class VoiceDetailViewController: UIViewController, AVAudioPlayerDelegate {
     }
     
     func updateProgress() {
-        audioPlayer.updateMeters()
-        playingProgress.progress = Float(audioPlayer.currentTime/audioPlayer.duration)
+        audioPlayer!.updateMeters()
+        let progress = Float(audioPlayer!.currentTime/audioPlayer!.duration)
+        playingProgress.progress = progress > 0.98 ? 1: progress
+//        print(playingProgress.progress)
     }
     
     /*
@@ -126,7 +140,7 @@ extension VoiceDetailViewController: UICollectionViewDelegate, UICollectionViewD
         if voice.tags![indexPath.item] == "+" {
             var tagTextField: UITextField?
             
-            let alertController = UIAlertController(title: "Add TAG", message: nil, preferredStyle: .Alert)
+            let alertController = UIAlertController(title: "Add Tag", message: nil, preferredStyle: .Alert)
             let ok = UIAlertAction(title: "OK", style: .Default, handler: { (action) -> Void in
                 if let tagText = tagTextField!.text {
                     self.voice.tags!.insert(tagText, atIndex: self.voice.tags!.count-1)
@@ -138,7 +152,7 @@ extension VoiceDetailViewController: UICollectionViewDelegate, UICollectionViewD
             alertController.addAction(cancel)
             alertController.addTextFieldWithConfigurationHandler { (textField) -> Void in
                 tagTextField = textField
-                tagTextField!.placeholder = "TAG"
+                tagTextField!.placeholder = "Tag"
             }
             presentViewController(alertController, animated: true, completion: nil)
         }

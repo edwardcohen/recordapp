@@ -2,7 +2,7 @@
 //  JTAppleCollectionReusableView.swift
 //  Pods
 //
-//  Created by Jay Thomas on 2016-05-11.
+//  Created by JayT on 2016-05-11.
 //
 //
 
